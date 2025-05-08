@@ -1,5 +1,5 @@
-import Foundation
 import Crypto
+import Foundation
 
 public enum Swazure {
     public struct Configuration {
@@ -22,12 +22,12 @@ public enum Swazure {
         public func signedURL(
             container: String,
             blob: String,
-            permissions: AzureServiceSASParameters.Permission,
+            permissions: ServiceSAS.Permission,
             start: Date,
             expiry: Date,
-            responseHeaders: AzureServiceSASParameters.ResponseHeaders? = nil
+            responseHeaders: ServiceSAS.ResponseHeaders? = nil
         ) throws -> URL {
-            let parameters = AzureServiceSASParameters(
+            let parameters = ServiceSAS(
                 permissions: permissions,
                 resource: .blob,
                 start: start,
@@ -41,7 +41,7 @@ public enum Swazure {
             return try signedURL(for: parameters, container: container, blobName: blob)
         }
         
-        private func signedURL(for parameters: AzureServiceSASParameters, container: String, blobName: String) throws -> URL {
+        private func signedURL(for parameters: ServiceSAS, container: String, blobName: String) throws -> URL {
             try validate(parameters)
             
             let queryItems = try signedQueryItems(for: parameters, container: container, blobName: blobName)
@@ -58,7 +58,7 @@ public enum Swazure {
             return url
         }
         
-        private func signedQueryItems(for parameters: AzureServiceSASParameters, container: String, blobName: String) throws -> [URLQueryItem] {
+        private func signedQueryItems(for parameters: ServiceSAS, container: String, blobName: String) throws -> [URLQueryItem] {
             let canonicalizedResource = "/blob/\(config.accountName)/\(container)/\(blobName)"
             
             let parts: [String] = [
@@ -120,7 +120,7 @@ public enum Swazure {
             return items
         }
         
-        private func validate(_ parameters: AzureServiceSASParameters) throws {
+        private func validate(_ parameters: ServiceSAS) throws {
             guard !parameters.permissions.description.isEmpty else {
                 throw SigningError.invalidPermissions
             }
@@ -149,71 +149,4 @@ private extension Date {
         fmt.timeZone = TimeZone(secondsFromGMT: 0)
         return fmt
     }()
-}
-
-
-import Foundation
-
-public struct AzureServiceSASParameters {
-    public var permissions: Permission
-    public var resource: Resource
-    public var start: Date?
-    public var expiry: Date
-    public var identifier: String?
-    public var ipRange: String?
-    public var protocolType: HTTPProtocol = .httpsOnly
-    public var version: Version = .v2022_11_02
-    public var responseHeaders: ResponseHeaders?
-    
-    public enum Resource: String {
-        case blob = "b"
-        case container = "c"
-        case file = "f"
-        case queue = "q"
-        case table = "t"
-    }
-    
-    public struct Permission: OptionSet, CustomStringConvertible {
-        public let rawValue: Int
-        
-        public static let read    = Permission(rawValue: 1 << 0)
-        public static let write   = Permission(rawValue: 1 << 1)
-        public static let delete  = Permission(rawValue: 1 << 2)
-        public static let list    = Permission(rawValue: 1 << 3)
-        public static let add     = Permission(rawValue: 1 << 4)
-        public static let create  = Permission(rawValue: 1 << 5)
-        public static let update  = Permission(rawValue: 1 << 6)
-        public static let process = Permission(rawValue: 1 << 7)
-        
-        public var description: String {
-            let all: [(Permission, String)] = [
-                (.read, "r"), (.write, "w"), (.delete, "d"), (.list, "l"),
-                (.add, "a"), (.create, "c"), (.update, "u"), (.process, "p")
-            ]
-            return all.compactMap { contains($0.0) ? $0.1 : nil }.joined()
-        }
-        
-        public init(rawValue: Int) {
-            self.rawValue = rawValue
-        }
-    }
-    
-    public struct ResponseHeaders {
-        public var cacheControl: String?
-        public var contentDisposition: String?
-        public var contentEncoding: String?
-        public var contentLanguage: String?
-        public var contentType: String?
-    }
-    
-    public enum HTTPProtocol: String {
-        case httpsOnly = "https"
-        case httpsAndHttp = "https,http"
-    }
-    
-    public enum Version: String {
-        case v2022_11_02 = "2022-11-02"
-        case v2020_04_08 = "2020-04-08"
-        case v2018_03_28 = "2018-03-28"
-    }
 }
