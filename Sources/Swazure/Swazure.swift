@@ -35,7 +35,7 @@ public enum Swazure {
                 identifier: nil,
                 ipRange: nil,
                 protocolType: .httpsOnly,
-                version: .v2022_11_02,
+                version: .v2024_11_04,
                 responseHeaders: responseHeaders
             )
             return try signedURL(for: parameters, container: container, blobName: blob)
