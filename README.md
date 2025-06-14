@@ -4,6 +4,9 @@ Swazure is a lightweight Swift SDK for generating Azure Storage **Service SAS** 
 
 Currently, only **Service SAS** is supported. Other SAS types (such as Account SAS and User Delegation SAS) are planned for future versions.
 
+## TODO
+- Account SAS
+
 ## Features
 
 - Generate SAS tokens for Azure **Blob Storage**
